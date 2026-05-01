@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.hit</groupId>
+    <artifactId>campus-navigation</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>HIT Campus Navigation</name>
+    <description>
+        Client/Server campus navigation app with Shortest Path algorithm module
+        (Dijkstra + BFS). Course project for Advanced Programming in Java, HIT.
+    </description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- Gson: JSON serialization for the wire protocol and persistence files. -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+
+        <!-- JUnit 4: unit-testing framework (HIT default). -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            JxMapViewer 2: Swing component that renders OpenStreetMap / satellite
+            tiles in a JComponent. Used by com.hit.client.view.MapPanel to show
+            the HIT campus on a real map. This is a Swing widget library, not a
+            client/server framework — fully within the brief's "no Spring/React"
+            constraint.
+        -->
+        <dependency>
+            <groupId>org.jxmapviewer</groupId>
+            <artifactId>jxmapviewer2</artifactId>
+            <version>2.8</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Compiler plugin pinned for reproducibility. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+
+            <!-- Surefire plugin runs JUnit tests on `mvn test`. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.0</version>
+            </plugin>
+
+            <!--
+                Exec plugin. We deliberately don't hard-code a default mainClass
+                because this project ships two entry points (server + client).
+                Instead, use one of:
+
+                    mvn exec:java -Dexec.mainClass=com.hit.server.ServerMain
+                    mvn exec:java -Dexec.mainClass=com.hit.client.ClientMain
+
+                The named executions below also let you run:
+
+                    mvn exec:java@server
+                    mvn exec:java@client
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>server</id>
+                        <configuration>
+                            <mainClass>com.hit.server.ServerMain</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>client</id>
+                        <configuration>
+                            <mainClass>com.hit.client.ClientMain</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

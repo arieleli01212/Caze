@@ -1,0 +1,29 @@
+# Maven
+target/
+pom.xml.versionsBackup
+dependency-reduced-pom.xml
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+
+# Runtime data files (regenerated each session)
+data/history.json
