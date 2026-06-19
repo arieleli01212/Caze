@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hit</groupId>
+        <artifactId>campus-navigation-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>algorithm</artifactId>
+    <packaging>jar</packaging>
+    <name>Algorithm Module</name>
+    <description>
+        Standalone algorithm library: IAlgoShortestPath interface, Dijkstra
+        (weighted/FASTEST) and BFS (unweighted/FEWEST_SEGMENTS) implementations,
+        Strategy Pattern, Template Method via AbstractAlgoShortestPath, and Graph.
+        Packaged as an independent JAR and added as a library by the server module.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
