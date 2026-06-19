@@ -20,6 +20,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javafx.version>21.0.4</javafx.version>
     </properties>
 
     <dependencies>
@@ -38,17 +39,21 @@
             <scope>test</scope>
         </dependency>
 
-        <!--
-            JxMapViewer 2: Swing component that renders OpenStreetMap / satellite
-            tiles in a JComponent. Used by com.hit.client.view.MapPanel to show
-            the HIT campus on a real map. This is a Swing widget library, not a
-            client/server framework — fully within the brief's "no Spring/React"
-            constraint.
-        -->
+        <!-- JavaFX: GUI framework required by Part D of the assignment. -->
         <dependency>
-            <groupId>org.jxmapviewer</groupId>
-            <artifactId>jxmapviewer2</artifactId>
-            <version>2.8</version>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>${javafx.version}</version>
         </dependency>
     </dependencies>
 
@@ -61,25 +66,21 @@
                 <version>3.13.0</version>
             </plugin>
 
-            <!-- Surefire plugin runs JUnit tests on `mvn test`. -->
+            <!-- Surefire: run JUnit tests on `mvn test`. Excludes JavaFX UI tests. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.0</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/ClientApp*</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
 
             <!--
-                Exec plugin. We deliberately don't hard-code a default mainClass
-                because this project ships two entry points (server + client).
-                Instead, use one of:
-
-                    mvn exec:java -Dexec.mainClass=com.hit.server.ServerMain
-                    mvn exec:java -Dexec.mainClass=com.hit.client.ClientMain
-
-                The named executions below also let you run:
-
+                Exec plugin for the server:
                     mvn exec:java@server
-                    mvn exec:java@client
             -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -92,13 +93,21 @@
                             <mainClass>com.hit.server.ServerMain</mainClass>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>client</id>
-                        <configuration>
-                            <mainClass>com.hit.client.ClientMain</mainClass>
-                        </configuration>
-                    </execution>
                 </executions>
+            </plugin>
+
+            <!--
+                JavaFX Maven plugin for the client (handles module-path automatically):
+                    mvn javafx:run
+                    mvn javafx:run -Djavafx.args="localhost 8080"
+            -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>com.hit.client.ClientApp</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
