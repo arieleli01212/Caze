@@ -6,7 +6,10 @@ import com.hit.dao.ICampusDAO;
 import com.hit.dao.IHistoryDAO;
 import com.hit.dm.Campus;
 import com.hit.server.controller.ControllerFactory;
+import com.hit.server.controller.HistoryClearController;
+import com.hit.server.controller.HistoryGetController;
 import com.hit.server.controller.RouteController;
+import com.hit.service.HistoryService;
 import com.hit.service.NavigationService;
 
 import java.io.IOException;
@@ -48,10 +51,13 @@ public final class ServerMain {
 
             IHistoryDAO historyDAO = new FileHistoryDAO(historyPath);
             NavigationService navigationService = new NavigationService(campus, historyDAO);
+            HistoryService    historyService    = new HistoryService(historyDAO);
 
             // Build the controller factory — populated once at startup.
             ControllerFactory factory = new ControllerFactory();
-            factory.register("route/find", new RouteController(navigationService));
+            factory.register("route/find",    new RouteController(navigationService));
+            factory.register("history/get",   new HistoryGetController(historyService));
+            factory.register("history/clear", new HistoryClearController(historyService));
 
             RequestDispatcher dispatcher = new RequestDispatcher(factory);
             Server server = new Server(port, dispatcher);

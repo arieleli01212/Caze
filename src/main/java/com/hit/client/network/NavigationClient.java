@@ -2,6 +2,8 @@ package com.hit.client.network;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+import com.hit.protocol.HistoryEntry;
 import com.hit.protocol.ProtocolCodec;
 import com.hit.protocol.RouteRequest;
 import com.hit.protocol.RouteResponse;
@@ -11,8 +13,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Thin client-side wrapper around a TCP socket conversation with the server.
@@ -42,6 +47,32 @@ public class NavigationClient {
         ServerRequest envelope = new ServerRequest("route/find", body);
         String responseLine = sendRaw(ProtocolCodec.encode(envelope));
         return ProtocolCodec.decode(responseLine, RouteResponse.class);
+    }
+
+    /**
+     * Fetches the route-history list from the server.
+     *
+     * @throws IOException if the connection fails
+     */
+    public List<HistoryEntry> getHistory() throws IOException {
+        ServerRequest envelope = new ServerRequest("history/get", new JsonObject());
+        String raw = sendRaw(ProtocolCodec.encode(envelope));
+        Type listType = new TypeToken<List<HistoryEntry>>() {}.getType();
+        List<HistoryEntry> result = GSON.fromJson(raw, listType);
+        return result != null ? result : Collections.emptyList();
+    }
+
+    /**
+     * Asks the server to clear all history.
+     *
+     * @return {@code true} if the server confirms success
+     * @throws IOException if the connection fails
+     */
+    public boolean clearHistory() throws IOException {
+        ServerRequest envelope = new ServerRequest("history/clear", new JsonObject());
+        String raw = sendRaw(ProtocolCodec.encode(envelope));
+        JsonObject response = GSON.fromJson(raw, JsonObject.class);
+        return response != null && response.has("cleared") && response.get("cleared").getAsBoolean();
     }
 
     /**

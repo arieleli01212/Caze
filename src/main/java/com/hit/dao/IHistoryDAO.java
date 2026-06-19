@@ -16,4 +16,7 @@ public interface IHistoryDAO {
 
     /** Reads the full history (oldest first). Returns empty list if none. */
     List<HistoryEntry> readAll() throws IOException;
+
+    /** Removes all history entries from the store. */
+    void clear() throws IOException;
 }

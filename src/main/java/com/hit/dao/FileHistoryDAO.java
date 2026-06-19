@@ -64,6 +64,14 @@ public class FileHistoryDAO implements IHistoryDAO {
         return parsed == null ? new ArrayList<>() : new ArrayList<>(parsed);
     }
 
+    @Override
+    public void clear() throws IOException {
+        synchronized (lock) {
+            ensureParentExists();
+            Files.writeString(filePath, "[]", StandardCharsets.UTF_8);
+        }
+    }
+
     private void ensureParentExists() throws IOException {
         Path parent = filePath.toAbsolutePath().getParent();
         if (parent != null && !Files.exists(parent)) {

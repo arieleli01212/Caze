@@ -106,5 +106,6 @@ public class NavigationServiceTest {
         final List<HistoryEntry> entries = new ArrayList<>();
         @Override public void append(HistoryEntry entry) { entries.add(entry); }
         @Override public List<HistoryEntry> readAll()    { return entries; }
+        @Override public void clear()                    { entries.clear(); }
     }
 }
