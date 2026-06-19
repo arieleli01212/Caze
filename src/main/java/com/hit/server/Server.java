@@ -14,10 +14,12 @@ import java.util.logging.Logger;
  * accepts incoming connections in a loop and hands each one to a
  * {@link ClientHandler} worker.
  * <p>
+ * Implements {@link Runnable} so callers can do {@code new Thread(server).start()},
+ * matching the course-required pattern from the assignment spec.
  * The pool size is fixed (10) — plenty for a student-load demo and
  * deterministic for the defense.
  */
-public class Server {
+public class Server implements Runnable {
 
     private static final Logger LOG       = Logger.getLogger(Server.class.getName());
     private static final int    POOL_SIZE = 10;
@@ -35,10 +37,20 @@ public class Server {
         this.pool       = Executors.newFixedThreadPool(POOL_SIZE);
     }
 
-    /** Binds the server socket and runs the accept loop until {@link #stop()}. */
-    public void start() throws IOException {
-        serverSocket = new ServerSocket(port);
-        running      = true;
+    /**
+     * Binds the server socket and runs the accept loop until {@link #stop()}.
+     * Required by {@link Runnable}; IO errors are caught and logged here
+     * since {@code run()} cannot declare checked exceptions.
+     */
+    @Override
+    public void run() {
+        try {
+            serverSocket = new ServerSocket(port);
+        } catch (IOException ioe) {
+            LOG.log(Level.SEVERE, "Cannot bind to port " + port, ioe);
+            return;
+        }
+        running = true;
         LOG.info("Campus navigation server listening on port " + port);
 
         while (running) {

@@ -51,7 +51,7 @@ public final class ServerMain {
 
             Server server = new Server(port, dispatcher);
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop, "shutdown-hook"));
-            server.start();
+            new Thread(server, "server-main").start();
 
         } catch (IOException ioe) {
             LOG.log(Level.SEVERE, "Server failed to start", ioe);
