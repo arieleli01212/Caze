@@ -1,0 +1,16 @@
+HIT Campus Navigation — Project Submission
+Advanced Programming in Java
+Holon Institute of Technology
+
+============================================================
+Student Details
+============================================================
+First Name:    Ariel
+Last Name:     Eli
+ID:            [YOUR_ID_HERE]
+Email:         arielsholet1234@gmail.com
+============================================================
+
+Project: Campus Navigation System
+Parts:   A (Algorithm), B (Services + DAO), C (TCP Server), D (JavaFX UI)
+Repo:    https://github.com/arieleli01212/Caze
