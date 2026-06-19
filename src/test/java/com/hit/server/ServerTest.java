@@ -10,6 +10,8 @@ import com.hit.protocol.RouteRequest;
 import com.hit.protocol.RouteResponse;
 import com.hit.protocol.ServerRequest;
 import com.hit.protocol.Status;
+import com.hit.server.controller.ControllerFactory;
+import com.hit.server.controller.RouteController;
 import com.hit.service.NavigationService;
 import org.junit.After;
 import org.junit.Before;
@@ -42,8 +44,10 @@ public class ServerTest {
         }
 
         Campus campus = new FileCampusDAO().load();
-        NavigationService service    = new NavigationService(campus, null);
-        RequestDispatcher dispatcher = new RequestDispatcher(service);
+        NavigationService service = new NavigationService(campus, null);
+        ControllerFactory factory  = new ControllerFactory();
+        factory.register("route/find", new RouteController(service));
+        RequestDispatcher dispatcher = new RequestDispatcher(factory);
 
         server = new Server(port, dispatcher);
         new Thread(server, "test-server").start();

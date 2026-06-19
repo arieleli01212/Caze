@@ -5,6 +5,8 @@ import com.hit.dao.FileHistoryDAO;
 import com.hit.dao.ICampusDAO;
 import com.hit.dao.IHistoryDAO;
 import com.hit.dm.Campus;
+import com.hit.server.controller.ControllerFactory;
+import com.hit.server.controller.RouteController;
 import com.hit.service.NavigationService;
 
 import java.io.IOException;
@@ -16,13 +18,12 @@ import java.util.logging.Logger;
 /**
  * Entry point for the server JVM.
  * <p>
- * Wires together the DAO, service, dispatcher, and {@link Server},
- * then starts the accept loop. Loaded campus comes from the bundled
- * resource by default; pass a path argument to load from disk instead.
+ * Wires together DAOs, services, controllers, the factory, the dispatcher,
+ * and the {@link Server}, then starts the accept loop via a dedicated thread.
  *
  * <pre>
- *   mvn exec:java -Dexec.mainClass=com.hit.server.ServerMain
- *   mvn exec:java -Dexec.mainClass=com.hit.server.ServerMain -Dexec.args="8080 ./my-campus.json"
+ *   mvn exec:java@server
+ *   mvn exec:java@server -Dexec.args="8080 ./my-campus.json ./data/history.json"
  * </pre>
  */
 public final class ServerMain {
@@ -46,9 +47,13 @@ public final class ServerMain {
             LOG.info("Loaded campus with " + campus.getBuildings().size() + " buildings");
 
             IHistoryDAO historyDAO = new FileHistoryDAO(historyPath);
-            NavigationService service = new NavigationService(campus, historyDAO);
-            RequestDispatcher dispatcher = new RequestDispatcher(service);
+            NavigationService navigationService = new NavigationService(campus, historyDAO);
 
+            // Build the controller factory — populated once at startup.
+            ControllerFactory factory = new ControllerFactory();
+            factory.register("route/find", new RouteController(navigationService));
+
+            RequestDispatcher dispatcher = new RequestDispatcher(factory);
             Server server = new Server(port, dispatcher);
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop, "shutdown-hook"));
             new Thread(server, "server-main").start();
