@@ -6,21 +6,28 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * Real-map view using a JavaFX {@link WebView} embedding Leaflet.js.
- * <p>
- * Tiles are loaded from OpenStreetMap CDN directly in the browser engine,
- * bypassing any JVM TLS or tile-proxy issues. Building markers and route
- * overlays are controlled via JavaScript bridge calls after the map loads.
+ *
+ * Leaflet JS and CSS are bundled in the classpath (client/src/main/resources/leaflet/)
+ * and inlined into the HTML page so that no network access is required at startup.
+ * OSM tile images are still fetched from the internet when the tab is shown.
  */
 public class LeafletMapView extends StackPane {
 
-    private final WebView    webView;
-    private final WebEngine  engine;
-    private final Campus     campus;
+    private static final Logger LOG = Logger.getLogger(LeafletMapView.class.getName());
+
+    private final WebView   webView;
+    private final WebEngine engine;
+    private final Campus    campus;
 
     private boolean mapLoaded = false;
 
@@ -30,15 +37,25 @@ public class LeafletMapView extends StackPane {
         this.engine  = webView.getEngine();
 
         engine.setJavaScriptEnabled(true);
+
+        // Log JS errors to the Java console so we can diagnose map issues.
+        engine.setOnError(e -> LOG.log(Level.WARNING, "WebView error: " + e.getMessage()));
         engine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
-            if (state == javafx.concurrent.Worker.State.SUCCEEDED) {
-                mapLoaded = true;
+            switch (state) {
+                case SUCCEEDED -> mapLoaded = true;
+                case FAILED    -> LOG.warning("LeafletMapView: page load FAILED — "
+                        + engine.getLoadWorker().getException());
+                default        -> {}
             }
         });
 
         getChildren().add(webView);
+        webView.prefWidthProperty().bind(widthProperty());
+        webView.prefHeightProperty().bind(heightProperty());
         engine.loadContent(buildHtml());
     }
+
+    // ---- public API called by ClientViewController ----
 
     public void setHighlightedPath(List<String> path) {
         if (!mapLoaded) return;
@@ -71,7 +88,10 @@ public class LeafletMapView extends StackPane {
     // ---- HTML generation ----
 
     private String buildHtml() {
-        // Build JSON array of buildings that have GPS coordinates.
+        // Inline Leaflet from classpath — avoids CDN network calls in WebView.
+        String leafletCss = loadResource("/leaflet/leaflet.min.css");
+        String leafletJs  = loadResource("/leaflet/leaflet.min.js");
+
         String buildings = campus.getBuildings().values().stream()
                 .filter(Building::hasGeoLocation)
                 .map(b -> String.format(
@@ -81,13 +101,14 @@ public class LeafletMapView extends StackPane {
 
         return "<!DOCTYPE html><html><head>"
                 + "<meta charset='utf-8'/>"
-                + "<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'/>"
-                + "<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>"
-                + "<style>body{margin:0;padding:0;}#map{width:100%;height:100vh;}</style>"
+                + "<style>" + leafletCss + "</style>"
+                + "<style>html,body,#map{margin:0;padding:0;width:100%;height:100%;}</style>"
+                + "<script>" + leafletJs + "</script>"
                 + "</head><body><div id='map'></div><script>"
                 + "var map=L.map('map').setView([32.0177,34.8925],16);"
                 + "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{"
-                + "attribution:'&copy; OpenStreetMap contributors',maxZoom:19}).addTo(map);"
+                + "  attribution:'\\u00a9 OpenStreetMap contributors',maxZoom:19"
+                + "}).addTo(map);"
                 + "var buildings=" + buildings + ";"
                 + "var markers={};"
                 + "var routeLayer=null,srcLayer=null,dstLayer=null;"
@@ -100,8 +121,8 @@ public class LeafletMapView extends StackPane {
                 + "});"
                 + "function highlightRoute(path){"
                 + "  if(routeLayer){map.removeLayer(routeLayer);}"
-                + "  var ll=path.map(function(n){var m=markers[n];"
-                + "    return m?[m.building.lat,m.building.lon]:null;"
+                + "  var ll=path.map(function(n){"
+                + "    var m=markers[n];return m?[m.building.lat,m.building.lon]:null;"
                 + "  }).filter(Boolean);"
                 + "  if(ll.length>1)routeLayer=L.polyline(ll,"
                 + "    {color:'#e63333',weight:5,opacity:0.85}).addTo(map);"
@@ -131,7 +152,22 @@ public class LeafletMapView extends StackPane {
                 + "</script></body></html>";
     }
 
+    private static String loadResource(String path) {
+        try (InputStream is = LeafletMapView.class.getResourceAsStream(path)) {
+            if (is == null) {
+                LOG.warning("Leaflet resource not found on classpath: " + path);
+                return "";
+            }
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            LOG.log(Level.WARNING, "Failed to load Leaflet resource: " + path, e);
+            return "";
+        }
+    }
+
     private static String escape(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "\\'");
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("'",  "\\'");
     }
 }
