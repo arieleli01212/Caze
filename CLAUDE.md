@@ -5,22 +5,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & run
 
 ```bash
-# Compile all modules and run all tests
-mvn clean test
+# Compile all modules, run all tests, AND install JARs to local Maven repo
+mvn clean install
 
-# Run a single test class (from server module)
-mvn test -pl server -Dtest=IAlgoShortestPathTest
+# Run a single test class
+mvn test -pl server -Dtest=ServerTest
 
-# Start the server (port 8080) — from project root
+# Start the server (port 8080) — requires mvn install to have been run first
 mvn exec:java@server -pl server
 
-# Start the JavaFX client — from project root
+# Start the JavaFX client — requires mvn install to have been run first
 mvn javafx:run -pl client
 
 # Build standalone server fat-jar
-mvn package -pl algorithm,server
+mvn install -DskipTests
 java -jar server/target/server-1.0-SNAPSHOT.jar
 ```
+
+**Important:** always use `mvn install` (not just `mvn test` or `mvn package`) before running
+individual modules. The server depends on the algorithm JAR, which must be installed to the
+local Maven repository (`~/.m2`) before `mvn exec:java@server -pl server` can resolve it.
 
 Server accepts optional args: `-Dexec.args="<port> <campus.json> <history.json>"`.
 

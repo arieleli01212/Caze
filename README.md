@@ -24,21 +24,25 @@ campus-navigation-parent   (root pom.xml — aggregator, packaging=pom)
 ## Quick start
 
 ```bash
-# Build everything and run all tests (39 tests across all modules)
-mvn clean test
+# Step 1 — build all modules, run tests, install JARs to local Maven repo
+mvn clean install
 
-# Terminal 1 — start the server on port 8080
+# Step 2a — start the server on port 8080 (separate terminal)
 mvn exec:java@server -pl server
 
-# Terminal 2 — launch the JavaFX client
+# Step 2b — launch the JavaFX client (separate terminal)
 mvn javafx:run -pl client
 ```
+
+> **Note:** use `mvn install` (not `mvn test` or `mvn package`) before running individual
+> modules. The server depends on the `algorithm` JAR, which must be in the local Maven
+> repository (`~/.m2`) before `-pl server` can resolve it.
 
 Optional server args: `-Dexec.args="<port> <campus.json> <history.json>"`
 
 Build a standalone server fat-jar:
 ```bash
-mvn package -pl algorithm,server
+mvn install -DskipTests
 java -jar server/target/server-1.0-SNAPSHOT.jar
 ```
 
