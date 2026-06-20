@@ -162,6 +162,13 @@ public class ClientViewController implements ClientController.RouteListener {
         tabMap.setClosable(false);
         tabHist.setClosable(false);
 
+        // Leaflet measures the container at init time; by the time the user
+        // clicks "Real Map" the WebView has been fully laid out, so we tell
+        // Leaflet to re-measure and fill the available space.
+        tabMap.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
+            if (isSelected) leafletMapView.invalidateSize();
+        });
+
         tabPane = new TabPane(tab3d, tabMap, tabHist);
         return tabPane;
     }

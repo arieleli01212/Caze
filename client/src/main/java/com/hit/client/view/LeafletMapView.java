@@ -85,6 +85,12 @@ public class LeafletMapView extends StackPane {
         engine.executeScript("clearSelection()");
     }
 
+    /** Call when the containing tab becomes visible so Leaflet re-measures and fills the pane. */
+    public void invalidateSize() {
+        if (!mapLoaded) return;
+        engine.executeScript("map.invalidateSize(true)");
+    }
+
     // ---- HTML generation ----
 
     private String buildHtml() {
@@ -102,7 +108,10 @@ public class LeafletMapView extends StackPane {
         return "<!DOCTYPE html><html><head>"
                 + "<meta charset='utf-8'/>"
                 + "<style>" + leafletCss + "</style>"
-                + "<style>html,body,#map{margin:0;padding:0;width:100%;height:100%;}</style>"
+                + "<style>"
+                + "html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;}"
+                + "#map{position:absolute;top:0;bottom:0;left:0;right:0;}"
+                + "</style>"
                 + "<script>" + leafletJs + "</script>"
                 + "</head><body><div id='map'></div><script>"
                 + "var map=L.map('map').setView([32.0177,34.8925],16);"
